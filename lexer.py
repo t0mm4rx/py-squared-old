@@ -8,43 +8,63 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 class TokenTypes(Enum):
-	PARENTHESIS_OPEN	= auto()
-	PARENTHESIS_CLOSE	= auto()
-	LITERAL			= auto()
+    """Type of tokens."""
+    PARENTHESIS_OPEN	= auto()
+    PARENTHESIS_CLOSE	= auto()
+    LITERAL				= auto()
 
 @dataclass
 class Token:
-	token_type: TokenTypes
-	line_position: int
-	row_position: int
+    """A container for a token in the source code."""
+    token_type: TokenTypes
+    line_position: int
+    row_position: int
+    value: str | None = None
 
-def word_to_token(word: str, line: int, row: int) -> Token:
-	"""Convert a word into a Token."""
-	new_token = Token()
-	new_token.line_position = line
-	new_token.row_position = row
-	if word == "(":
-		new_token.token_type = TokenTypes.PARENTHESIS_OPEN
-	elif word == ")":
-		new_token.token_type = TokenTypes.PARENTHESIS_CLOSE
-	else:
-		new_token.token_type = TokenTypes.LITERAL
+KEYWORDS: dict[str, TokenTypes] = {
+    "(": TokenTypes.PARENTHESIS_OPEN,
+    ")": TokenTypes.PARENTHESIS_CLOSE,
+}
+
+def word_to_token(word: str, line_position: int, row_position: int) -> Token:
+    """Convert a word into a Token."""
+    if word in KEYWORDS:
+        return Token(
+            token_type=KEYWORDS[word],
+            line_position=line_position,
+            row_position=row_position,
+        )
+    return Token(
+        token_type=TokenTypes.LITERAL,
+        line_position=line_position,
+        row_position=row_position,
+        value=word,
+    )
 
 def lex(source: str) -> list[Token]:
-	"""Convert the given source string as an array of tokens."""
-	tokens: list[Token] = []
-	for line_number, line in enumerate(source.split("\n")):
-		current_word = ""
-		for row_number, char in enumerate(line):
-			if char == " ":
-				current_word = ""
-				continue
-			if char == "(" or char == ")":
-				if len(current_word) > 0:
-					tokens.append(word_to_token(current_word, line_number, row_number))
-					current_word = ""
-				tokens.append(word_to_token(char))
-			else:
-				current_word += char
-	return tokens
-
+    """Convert the given source string as an array of tokens."""
+    tokens: list[Token] = []
+    for line_position, line in enumerate(source.split("\n")):
+        current_word = ""
+        for row_position, char in enumerate(line):
+            if char == " ":
+                current_word = ""
+                continue
+            if char in KEYWORDS:
+                if len(current_word) > 0:
+                    tokens.append(word_to_token(
+                        current_word,
+                        line_position,
+                        row_position
+                    ))
+                    current_word = ""
+                tokens.append(
+                    word_to_token(
+                        char,
+                        line_position,
+                        row_position,
+                    ),
+                )
+            else:
+                current_word += char
+    return tokens
