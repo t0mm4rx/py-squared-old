@@ -1,4 +1,5 @@
 """Compile an AST into C code."""
+import os
 from abstract_syntax_tree import ASTNode, tokens_to_ast, ASTNodeTypes
 from lexer import lex
 main_content = open("lib_c/main.c", "r", encoding="utf-8").read()
@@ -20,5 +21,8 @@ def compile_file(source_file: str, output_file: str) -> None:
     tokens_to_ast(lex(source_code), main)
     main = main_content.replace("// %main", compile_ast(main))
 
-    with open(output_file, "w") as output:
+    with open(output_file, "w", encoding="utf-8") as output:
         output.write(main)
+
+    binary_name = output_file.replace(".c", "")
+    os.system(f"gcc -O3 {output_file} -o {binary_name}")
