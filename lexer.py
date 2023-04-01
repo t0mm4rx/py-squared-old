@@ -11,6 +11,8 @@ class TokenTypes(Enum):
     """Type of tokens."""
     PARENTHESIS_OPEN	= auto()
     PARENTHESIS_CLOSE	= auto()
+    COLON				= auto()
+    EQUALS				= auto()
     LITERAL				= auto()
 
 @dataclass
@@ -24,6 +26,8 @@ class Token:
 KEYWORDS: dict[str, TokenTypes] = {
     "(": TokenTypes.PARENTHESIS_OPEN,
     ")": TokenTypes.PARENTHESIS_CLOSE,
+    ":": TokenTypes.COLON,
+    "=": TokenTypes.EQUALS,
 }
 
 def word_to_token(word: str, line_position: int, row_position: int) -> Token:
@@ -48,6 +52,13 @@ def lex(source: str) -> list[Token]:
         current_word = ""
         for row_position, char in enumerate(line):
             if char == " ":
+                if len(current_word) > 0:
+                    tokens.append(word_to_token(
+                        current_word,
+                        line_position,
+                        row_position,
+                    ))
+                    current_word = ""
                 current_word = ""
                 continue
             if char in KEYWORDS:
@@ -55,7 +66,7 @@ def lex(source: str) -> list[Token]:
                     tokens.append(word_to_token(
                         current_word,
                         line_position,
-                        row_position
+                        row_position,
                     ))
                     current_word = ""
                 tokens.append(
@@ -67,4 +78,10 @@ def lex(source: str) -> list[Token]:
                 )
             else:
                 current_word += char
+        if len(current_word) > 0:
+            tokens.append(word_to_token(
+                current_word,
+                line_position,
+                row_position,
+            ))
     return tokens
